@@ -26,6 +26,7 @@
 <script setup>
 import { computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import MainLayout from '@/components/common/MainLayout.vue';
 import { fetchUserProfile } from '@/features/auth/services/authService.js';
 
 // --- Lógica de Layout ---
