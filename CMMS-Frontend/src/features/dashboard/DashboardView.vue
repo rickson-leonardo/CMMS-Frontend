@@ -1,95 +1,81 @@
-/**
- * @file DashboardView.vue
- * @description View principal do Dashboard Gerencial. Exibe resumos e KPIs.
- * @path src/features/dashboard/DashboardView.vue
- * @version 1.1.0 - Utiliza BaseCard para estrutura
- * @date 2025-10-24
- */
+<!-- CMMS-Frontend/src/features/dashboard/DashboardView.vue -->
 <template>
   <div class="dashboard-view">
     <h1 class="dashboard-title">Dashboard Gerencial</h1>
 
-    <!-- Secção de KPIs utilizando BaseCard -->
-    <div class="kpi-section">
-      <BaseCard class="kpi-card">
-        <h6 class="kpi-title">OS Aguardando Aprovação</h6>
-        <p class="kpi-value">4</p>
-      </BaseCard>
-      <BaseCard class="kpi-card">
-        <h6 class="kpi-title">OS de Alta Prioridade</h6>
-        <p class="kpi-value">2</p>
-      </BaseCard>
-      <BaseCard class="kpi-card">
-        <h6 class="kpi-title">OS Em Progresso</h6>
-        <p class="kpi-value">7</p>
-      </BaseCard>
-      <BaseCard class="kpi-card">
-        <h6 class="kpi-title">Tickets Abertos</h6>
-        <p class="kpi-value">12</p>
-      </BaseCard>
+    <div v-if="isLoading" class="loading-state">
+      <p>Carregando...</p>
+    </div>
+    <div v-if="error" class="error-state">
+      <p>{{ error }}</p>
     </div>
 
-    <!-- Secção de Ordens de Serviço Críticas utilizando BaseCard -->
-    <BaseCard title="Ordens de Serviço Críticas">
-      <!-- Slot 'extra' para o link "Ver todas" -->
-      <template #extra>
-        <a href="#" class="view-all-link">Ver todas</a>
-      </template>
-
-      <!-- Conteúdo principal (futura tabela ou lista) -->
-      <div>
-        <p class="placeholder-text"><i>(Lista de OS críticas aparecerá aqui...)</i></p>
-        <!-- Exemplo futuro: <WorkOrderList :items="criticalWorkOrders" /> -->
+    <div v-if="!isLoading && !error" class="dashboard-content">
+      <div class="kpi-section">
+        <StatsCard v-for="kpi in kpis" :key="kpi.id" :title="kpi.title" :value="kpi.value" />
       </div>
-    </BaseCard>
 
-    <!-- Outras secções podem ser adicionadas aqui usando BaseCard -->
+      <BaseCard title="Ordens de Serviço Críticas">
+        <template #extra>
+          <a href="#" class="view-all-link">Ver todas</a>
+        </template>
+        <div>
+          <ul v-if="criticalWorkOrders.length" class="work-order-list">
+            <li v-for="order in criticalWorkOrders" :key="order.id">
+              <strong>{{ order.title }}</strong> em {{ order.asset }} - Status: {{ order.status }}
+            </li>
+          </ul>
+          <p v-else class="placeholder-text">
+            Nenhuma ordem de serviço crítica.
+          </p>
+        </div>
+      </BaseCard>
 
+      <MaintenanceChart />
+    </div>
   </div>
 </template>
 
 <script setup>
-/**
- * @description Script setup para o DashboardView.
- * Importa BaseCard e prepara para buscar dados.
- */
-import { ref, onMounted } from 'vue';
-import BaseCard from '@/components/base/BaseCard.vue'; // Importa o BaseCard
-// Futuramente importaremos serviços: import { dashboardService } from './services/dashboardService';
+import {
+  ref,
+  onMounted
+} from 'vue';
+import BaseCard from '@/components/base/BaseCard.vue';
+import StatsCard from './components/StatsCard.vue';
+import MaintenanceChart from './components/MaintenanceChart.vue';
+import {
+  dashboardService
+} from './services/dashboardService';
 
-// Exemplo de como buscaríamos dados
 const isLoading = ref(false);
-const dashboardData = ref(null);
-const criticalWorkOrders = ref([]); // Exemplo para a lista de OS
+const error = ref(null);
+const kpis = ref([]);
+const criticalWorkOrders = ref([]);
 
-/*
 onMounted(async () => {
   isLoading.value = true;
+  error.value = null;
   try {
-    // const summary = await dashboardService.getSummary();
-    // dashboardData.value = summary;
-    // criticalWorkOrders.value = await dashboardService.getCriticalWorkOrders();
-
-    // Simulação:
-    await new Promise(resolve => setTimeout(resolve, 500));
-    criticalWorkOrders.value = [ // Dados simulados para exemplo
-        { id: 'uuid-1', title: 'Verificar superaquecimento', asset: 'Prensa P-05', status: 'Aguardando Aprovação', priority: 1 },
-        { id: 'uuid-2', title: 'Falha no sensor', asset: 'Compressor C-101', status: 'Em Progresso', priority: 1 },
-    ];
-    console.log('Dados do dashboard carregados (simulado)');
-  } catch (error) {
-    console.error('Erro ao carregar dados do dashboard:', error);
+    const [summary, orders] = await Promise.all([
+      dashboardService.getSummary(),
+      dashboardService.getCriticalWorkOrders(),
+    ]);
+    kpis.value = summary;
+    criticalWorkOrders.value = orders;
+  } catch (err) {
+    error.value =
+      'Falha ao carregar os dados do dashboard. Tente novamente mais tarde.';
+    console.error(err);
   } finally {
     isLoading.value = false;
   }
 });
-*/
 </script>
 
 <style scoped>
 .dashboard-view {
-  /* Mantém o padding do exemplo anterior */
-   padding: var(--spacing-6);
+  padding: var(--spacing-6);
 }
 
 .dashboard-title {
@@ -106,47 +92,34 @@ onMounted(async () => {
   margin-bottom: var(--spacing-8);
 }
 
-/* Estilização específica para os cards de KPI */
-.kpi-card {
-  text-align: center;
-}
-
-/* :deep() é usado para estilizar conteúdo DENTRO do slot do BaseCard */
-:deep(.kpi-card .base-card__body) {
-  padding: var(--spacing-6); /* Ajusta padding se necessário */
-}
-
-.kpi-title {
-  color: var(--color-text-muted);
-  font-weight: var(--font-weight-medium);
-  font-size: var(--font-size-sm); /* Tamanho menor para o título do KPI */
-  margin-bottom: var(--spacing-2); /* Menos espaço abaixo do título */
-  text-transform: uppercase; /* Opcional: deixar em maiúsculas */
-  letter-spacing: 0.5px; /* Opcional: espaçamento leve */
-}
-
-.kpi-value {
-  font-size: 2.5rem;
-  font-weight: var(--font-weight-bold);
-  color: var(--color-interactive-primary);
-  margin: 0;
-  line-height: 1.1; /* Ajusta a altura da linha para o número grande */
-}
-
-/* Estilo para o link "Ver todas" no slot extra */
 .view-all-link {
   font-size: var(--font-size-sm);
   color: var(--color-text-link);
   text-decoration: none;
 }
+
 .view-all-link:hover {
   text-decoration: underline;
 }
 
 .placeholder-text {
   color: var(--color-text-muted);
-  padding: var(--spacing-8) 0; /* Adiciona espaço vertical no placeholder */
+  padding: var(--spacing-8) 0;
   text-align: center;
 }
-</style>
 
+.work-order-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.work-order-list li {
+  padding: var(--spacing-2) 0;
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.work-order-list li:last-child {
+  border-bottom: none;
+}
+</style>
