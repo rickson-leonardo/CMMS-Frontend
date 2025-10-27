@@ -1,0 +1,163 @@
+/**
+ * @file _variables.css
+ * @description Definição dos Design Tokens (Variáveis CSS) globais da aplicação CMMS.
+ * @path src/styles/_variables.css
+ * @version 1.0.0
+ * @date 2025-10-24
+ */
+
+/*
+  Este arquivo segue a estrutura de Design Tokens em dois níveis:
+  1. Primitive Tokens: Valores brutos e contextualmente agnósticos (paleta de cores, tamanhos).
+     NÃO DEVEM SER USADOS DIRETAMENTE NOS COMPONENTES.
+  2. Semantic Tokens: Tokens com propósito, nomeados de acordo com seu uso na UI.
+     DEVEM SER USADOS NOS COMPONENTES.
+  Referência: Arquitetura Frontend - Sistema CMMS.md, Seção 4.1
+*/
+
+:root {
+  /* ============================================= */
+  /* Primitive Tokens: A paleta de valores brutos. */
+  /* NÃO USE DIRETAMENTE NOS COMPONENTES.          */
+  /* ============================================= */
+
+  /* Cores (Exemplo inicial baseado na arquitetura) */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-500: #3b82f6; /* Primária */
+  --color-blue-600: #2563eb; /* Primária Hover */
+  --color-blue-700: #1d4ed8;
+
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6; /* Fundo de página */
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db; /* Borda padrão */
+  --color-gray-500: #6b7280; /* Texto Muted/Placeholder */
+  --color-gray-800: #1f2937; /* Texto Default */
+  --color-gray-900: #111827;
+
+  --color-white: #ffffff;   /* Fundo de Superfície (Cards, Modals) */
+  --color-black: #000000;
+
+  --color-red-50: #fef2f2;
+  --color-red-500: #ef4444; /* Erro */
+  --color-red-600: #dc2626; /* Erro Hover */
+
+  --color-green-50: #f0fdf4;
+  --color-green-500: #22c55e; /* Sucesso */
+  --color-green-600: #16a34a; /* Sucesso Hover */
+
+  --color-yellow-50: #fffbeb;
+  --color-yellow-400: #facc15;
+  --color-yellow-500: #f59e0b; /* Aviso (Warning) */
+
+  --color-orange-500: #f97316; /* Prioridade Alta (Exemplo) */
+
+  /* Tipografia */
+  --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --font-size-xs: 0.75rem;   /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-md: 1rem;      /* 16px (Base) */
+  --font-size-lg: 1.125rem;  /* 18px */
+  --font-size-xl: 1.25rem;   /* 20px */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  /* Espaçamento (Baseado em múltiplos de 4px) */
+  --spacing-1: 0.25rem;   /* 4px */
+  --spacing-2: 0.5rem;    /* 8px */
+  --spacing-3: 0.75rem;   /* 12px */
+  --spacing-4: 1rem;      /* 16px */
+  --spacing-6: 1.5rem;    /* 24px */
+  --spacing-8: 2rem;      /* 32px */
+
+  /* Bordas */
+  --border-radius-small: 0.25rem; /* 4px */
+  --border-radius-medium: 0.375rem; /* 6px */
+  --border-radius-large: 0.5rem;  /* 8px */
+  --border-radius-full: 9999px;   /* Pill/Circle */
+
+  /* Sombras */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* Transições */
+  --transition-duration-fast: 150ms;
+  --transition-duration-normal: 300ms;
+  --transition-timing-default: cubic-bezier(0.4, 0, 0.2, 1);
+
+
+  /* =================================================== */
+  /* Semantic Tokens: Tokens com propósito para uso na UI. */
+  /* USE ESTES TOKENS NOS COMPONENTES.                   */
+  /* =================================================== */
+
+  /* -- Cores de Fundo -- */
+  --color-background-page: var(--color-gray-100);       /* Fundo geral da página */
+  --color-background-surface: var(--color-white);      /* Fundo de cards, modais, inputs */
+  --color-background-muted: var(--color-gray-100);      /* Fundo sutil para hover, etc. */
+  --color-background-disabled: var(--color-gray-100);   /* Fundo de elementos desabilitados */
+  --color-background-interactive-subtle: var(--color-blue-50); /* Fundo sutil para hover de botões texto/link */
+
+  /* -- Cores de Texto -- */
+  --color-text-default: var(--color-gray-800);          /* Texto principal */
+  --color-text-muted: var(--color-gray-500);            /* Texto secundário, placeholders */
+  --color-text-label: var(--color-gray-800);            /* Texto de labels de formulário */
+  --color-text-on-interactive: var(--color-white);      /* Texto sobre botões primários/danger */
+  --color-text-placeholder: var(--color-gray-500);      /* Cor específica do placeholder */
+  --color-text-link: var(--color-interactive-primary);  /* Cor para links */
+  --color-text-error: var(--color-feedback-error);      /* Texto de erro */
+  --color-text-success: var(--color-feedback-success);  /* Texto de sucesso */
+  --color-text-warning: var(--color-feedback-warning);  /* Texto de aviso */
+
+  /* -- Cores de Borda -- */
+  --color-border-default: var(--color-gray-300);        /* Borda padrão (divisores, inputs) */
+  --color-border-input: var(--color-gray-300);          /* Borda específica de inputs */
+  --color-border-input-focus: var(--color-interactive-primary); /* Borda de input com foco */
+  --color-border-input-error: var(--color-feedback-error); /* Borda de input com erro */
+  --color-border-input-warning: var(--color-feedback-warning); /* Borda de input com aviso */
+
+  /* -- Cores Interativas (Botões, Links) -- */
+  --color-interactive-primary: var(--color-blue-500);        /* Cor principal para ações */
+  --color-interactive-primary-hover: var(--color-blue-600);  /* Hover da cor principal */
+  --color-interactive-secondary: var(--color-border-default);/* Cor secundária (borda botão secundário) */
+  --color-interactive-secondary-hover: var(--color-gray-200);/* Hover do botão secundário */
+
+  /* -- Cores de Feedback -- */
+  --color-feedback-error: var(--color-red-500);             /* Cor para erros */
+  --color-feedback-error-hover: var(--color-red-600);       /* Hover de erro */
+  --color-feedback-success: var(--color-green-500);           /* Cor para sucesso */
+  --color-feedback-success-hover: var(--color-green-600);     /* Hover de sucesso */
+  --color-feedback-warning: var(--color-yellow-500);        /* Cor para avisos */
+  --color-feedback-info: var(--color-blue-500);             /* Cor para informações (pode ser a primária) */
+
+  /* -- Cores de Prioridade (Exemplo) -- */
+  --color-priority-1: var(--color-red-500); /* Alta */
+  --color-priority-2: var(--color-orange-500); /* Média */
+  --color-priority-3: var(--color-yellow-400); /* Normal */
+
+  /* -- Tipografia Semântica -- */
+  --font-size-body: var(--font-size-md);
+  --font-size-label: var(--font-size-sm);
+  --font-size-button: var(--font-size-md);
+
+  /* -- Preenchimento (Padding) Semântico -- */
+  --padding-button-small: var(--spacing-1) var(--spacing-2);
+  --padding-button-medium: var(--spacing-2) var(--spacing-4);
+  --padding-button-large: var(--spacing-3) var(--spacing-6);
+  --padding-input-medium: var(--spacing-2) var(--spacing-3);
+  --padding-card: var(--spacing-6);
+  --padding-modal-body: var(--spacing-6);
+
+  /* -- Sombras Semânticas -- */
+  --shadow-focus-ring: 0 0 0 3px; /* Usado para criar o anel de foco */
+  --shadow-color-input-focus: rgba(59, 130, 246, 0.25);
+  --shadow-color-input-error: rgba(239, 68, 68, 0.25);
+  --shadow-color-input-warning: rgba(245, 158, 11, 0.25);
+}
