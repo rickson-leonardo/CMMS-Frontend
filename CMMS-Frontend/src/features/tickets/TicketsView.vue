@@ -37,8 +37,9 @@
 
     <!-- Card da Tabela -->
     <BaseCard>
+      <div v-if="error" class="alert alert-danger">{{ error }}</div>
       <BaseTable
-        :items="mockTickets"
+        :items="tickets"
         :columns="tableColumns"
         :loading="isLoading"
         row-key="id"
@@ -46,7 +47,19 @@
       >
         <!-- Customização das Células -->
         <template #cell-title="{ item, value }">
-             <a href="#" @click.prevent="viewDetails(item.id)" class="fw-bold text-decoration-none">{{ value }}</a>
+          <a href="#" @click.prevent="viewDetails(item.id)" class="fw-bold text-decoration-none">{{ value }}</a>
+        </template>
+
+        <template #cell-asset="{ item }">
+          {{ item.asset ? item.asset.name : 'N/A' }}
+        </template>
+
+        <template #cell-requester="{ item }">
+          {{ item.requester ? item.requester.full_name : 'N/A' }}
+        </template>
+
+        <template #cell-created_at="{ value }">
+          {{ formatDate(value) }}
         </template>
 
         <template #cell-status="{ value }">
@@ -74,41 +87,48 @@
 </template>
 
 <script setup>
-/**
- * @description Script setup para TicketsView. Inclui dados simulados,
- * configuração da tabela e funções de navegação.
- */
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { fetchTickets } from './services/ticketService';
 import BaseCard from '@/components/base/BaseCard.vue';
 import BaseTable from '@/components/base/BaseTable.vue';
 import BaseButton from '@/components/base/BaseButton.vue';
-// Placeholders para filtros
 import BaseInput from '@/components/base/BaseInput.vue';
 import BaseSelect from '@/components/base/BaseSelect.vue';
 
 const router = useRouter();
 
 // Estado
+const tickets = ref([]);
 const isLoading = ref(false);
+const error = ref(null);
 
-// Dados simulados
-const mockTickets = ref([
-    { id: 'uuid-t1', title: 'Painel da IHM não responde', asset: 'Prensa P-05', requester: 'Roberto Andrade', status: 'pending', createdAt: '2025-10-24T08:15:00Z' },
-    { id: 'uuid-t2', title: 'Luz de emergência piscando', asset: 'Painel Elétrico PE-03', requester: 'Lúcia Martins', status: 'open', createdAt: '2025-10-24T10:00:00Z' },
-    { id: 'uuid-t3', title: 'Vazamento na Bomba B-52', asset: 'Bomba B-52', requester: 'Carlos Pereira', status: 'resolved', createdAt: '2025-10-22T16:30:00Z' },
-    { id: 'uuid-t4', title: 'Porta do almoxarifado emperrada', asset: null, requester: 'Fernando Costa', status: 'closed', createdAt: '2025-10-20T11:00:00Z' },
-]);
-
-// Configuração das colunas da tabela
 const tableColumns = ref([
   { key: 'title', title: 'Título', sortable: true },
   { key: 'asset', title: 'Ativo' },
-  { key: 'requester', title: 'Solicitante', sortable: true },
+  { key: 'requester', title: 'Solicitante' },
   { key: 'status', title: 'Status', sortable: true },
-  { key: 'createdAt', title: 'Data Criação' },
+  { key: 'created_at', title: 'Data Criação' },
   { key: 'actions', title: 'Ações', class: 'text-end' }
 ]);
+
+const loadTickets = async () => {
+  isLoading.value = true;
+  error.value = null;
+  try {
+    const response = await fetchTickets();
+    tickets.value = response.results || [];
+  } catch (err) {
+    console.error("Erro ao carregar Tickets:", err);
+    error.value = "Não foi possível carregar os dados.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  loadTickets();
+});
 
 // Funções Auxiliares
 function getStatusLabel(statusValue) {

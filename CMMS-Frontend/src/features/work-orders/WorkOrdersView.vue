@@ -37,8 +37,9 @@
 
     <!-- Card da Tabela -->
     <BaseCard>
+      <div v-if="error" class="alert alert-danger">{{ error }}</div>
       <BaseTable
-        :items="mockWorkOrders"
+        :items="workOrders"
         :columns="tableColumns"
         :loading="isLoading"
         row-key="id"
@@ -46,8 +47,17 @@
         class="work-orders-table"
       >
         <!-- Customização das Células -->
+        <template #cell-asset="{ item }">
+          {{ item.asset ? item.asset.name : 'N/A' }}
+        </template>
+        <template #cell-assigned_to="{ item }">
+          {{ item.assigned_to ? item.assigned_to.full_name : 'Não atribuído' }}
+        </template>
+        <template #cell-created_at="{ value }">
+          {{ formatDate(value) }}
+        </template>
         <template #cell-status="{ value }">
-          <span :class="['status-badge', `status-${value.toLowerCase().replace(' ', '_')}`]">
+          <span :class="['status-badge', `status-${value.toLowerCase().replace(/ /g, '_')}`]">
             {{ value }}
           </span>
         </template>
@@ -82,42 +92,52 @@
 </template>
 
 <script setup>
-/**
- * @description Script setup para WorkOrdersView. Inclui dados simulados,
- * configuração da tabela e funções de navegação.
- */
-import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router'; // Importa useRouter
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { fetchWorkOrders } from './services/workOrderService'; // Ajuste o caminho se necessário
+
 import BaseCard from '@/components/base/BaseCard.vue';
 import BaseTable from '@/components/base/BaseTable.vue';
 import BaseButton from '@/components/base/BaseButton.vue';
-// Placeholders para filtros
 import BaseInput from '@/components/base/BaseInput.vue';
 import BaseSelect from '@/components/base/BaseSelect.vue';
 
-const router = useRouter(); // Inicializa o router
+const router = useRouter();
 
 // Estado
+const workOrders = ref([]);
 const isLoading = ref(false);
-// Dados simulados (Manter como antes)
-const mockWorkOrders = ref([
-    { id: 'uuid-1', title: 'Verificar superaquecimento do motor', asset: 'Prensa P-05', assignedTo: null, status: 'Aguardando Aprovação', priority: 1, createdAt: '2025-10-24T14:10:00Z' },
-    { id: 'uuid-2', title: 'Falha no sensor de pressão', asset: 'Compressor C-101', assignedTo: 'João Silva', status: 'Em Progresso', priority: 1, createdAt: '2025-10-24T11:30:00Z' },
-    { id: 'uuid-3', title: 'Ruído incomum na esteira', asset: 'Esteira E-22', assignedTo: null, status: 'Aberta', priority: 2, createdAt: '2025-10-23T17:00:00Z' },
-    { id: 'uuid-4', title: 'Manutenção preventiva semanal', asset: 'Forno F-01', assignedTo: 'Ana Souza', status: 'Aberta', priority: 3, createdAt: '2025-10-23T09:00:00Z'},
-    { id: 'uuid-5', title: 'Troca de filtro', asset: 'Sistema Exaustão S-03', assignedTo: 'Carlos Pereira', status: 'Concluída', priority: 3, createdAt: '2025-10-20T10:25:00Z'},
-]);
+const error = ref(null);
 
-// Configuração das colunas da tabela
+// Dados da Tabela
 const tableColumns = ref([
   { key: 'title', title: 'Título', sortable: true },
   { key: 'asset', title: 'Ativo', sortable: true },
-  { key: 'assignedTo', title: 'Atribuído a' },
+  { key: 'assigned_to', title: 'Atribuído a' },
   { key: 'status', title: 'Status', sortable: true },
   { key: 'priority', title: 'Prioridade', sortable: true },
-  { key: 'createdAt', title: 'Data Criação' },
-  { key: 'actions', title: 'Ações', class: 'text-end' } // Adiciona coluna de ações
+  { key: 'created_at', title: 'Data Criação' },
+  { key: 'actions', title: 'Ações', class: 'text-end' }
 ]);
+
+// Métodos
+const loadWorkOrders = async () => {
+  isLoading.value = true;
+  error.value = null;
+  try {
+    const response = await fetchWorkOrders();
+    workOrders.value = response.results || [];
+  } catch (err) {
+    console.error("Erro ao carregar Ordens de Serviço:", err);
+    error.value = "Não foi possível carregar os dados.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  loadWorkOrders();
+});
 
 // Funções Auxiliares (Manter como antes)
 function getPriorityLabel(priorityValue) {
