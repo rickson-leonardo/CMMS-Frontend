@@ -30,11 +30,12 @@
           </template>
         </BaseInput>
 
-        <!-- Simulação de Lista de Localizações -->
-        <ul class="location-list">
-          <li v-for="i in 5" :key="i" class="location-item">
-            <span class="location-name">Setor de Produção A{{ i }}</span>
-            <span class="location-assets">4 Ativos</span>
+        <div v-if="isLoading">Carregando...</div>
+        <div v-if="error" class="alert alert-danger">{{ error }}</div>
+        <ul v-if="!isLoading && !error" class="location-list">
+          <li v-for="location in locations" :key="location.id" class="location-item">
+            <span class="location-name">{{ location.name }}</span>
+            <span class="location-assets">{{ location.asset_count }} Ativos</span>
           </li>
         </ul>
         <div class="text-center mt-4">
@@ -58,12 +59,34 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import { fetchLocations } from './services/locationService';
 import BaseHeader from '@/components/base/BaseHeader.vue';
 import BaseButton from '@/components/base/BaseButton.vue';
 import BaseInput from '@/components/base/BaseInput.vue';
 
 const searchTerm = ref('');
+const locations = ref([]);
+const isLoading = ref(false);
+const error = ref(null);
+
+const loadLocations = async () => {
+  isLoading.value = true;
+  error.value = null;
+  try {
+    const response = await fetchLocations();
+    locations.value = response.results || [];
+  } catch (err) {
+    console.error("Erro ao carregar Localizações:", err);
+    error.value = "Não foi possível carregar os dados.";
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+onMounted(() => {
+  loadLocations();
+});
 </script>
 
 <style scoped>
