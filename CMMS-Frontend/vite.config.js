@@ -27,7 +27,16 @@ export default defineConfig({
       '@fullcalendar/list/main.css', // Tenta excluir o CSS do list da otimização
       // Adicione outros CSS do FullCalendar se necessário
     ]
-  }
+  },
   // *** FIM DA NOVA CONFIGURAÇÃO ***
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
+  }
 })
 
