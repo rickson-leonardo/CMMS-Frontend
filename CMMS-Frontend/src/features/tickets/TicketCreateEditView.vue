@@ -86,8 +86,8 @@ import BaseTextarea from '@/components/base/BaseTextarea.vue';
 import BaseSelect from '@/components/base/BaseSelect.vue';
 import BaseButton from '@/components/base/BaseButton.vue';
 import BaseCard from '@/components/base/BaseCard.vue';
-// Futuramente: import { ticketService } from './services/ticketService';
-// Futuramente: import { assetService } from '@/features/assets/services/assetService';
+import { createTicket, updateTicket, getTicketById } from './services/ticketService';
+import { fetchAssets as fetchAssetsService } from '@/features/assets/services/assetService';
 
 const route = useRoute();
 const router = useRouter();
@@ -95,7 +95,7 @@ const router = useRouter();
 // Estado
 const isLoading = ref(false);
 const isLoadingAssets = ref(false); // Para carregar a lista de ativos
-const errorMessage = ref(null);
+const errorMessage = ref('');
 const ticketId = ref(route.params.id || null); // Pega ID se estiver editando
 const isEditing = computed(() => !!ticketId.value);
 
@@ -107,29 +107,23 @@ const ticketData = reactive({
 });
 
 // Opções para o BaseSelect de Ativos
-const assetOptions = ref([]); // Será preenchido pela "API"
+const assetOptions = ref([]); // Será preenchido pela API
 
-// Simulação de busca de Ativos (para o BaseSelect)
+// Busca de Ativos (para o BaseSelect)
 async function fetchAssets() {
     isLoadingAssets.value = true;
     console.log("Buscando lista de ativos...");
-    await new Promise(resolve => setTimeout(resolve, 800)); // Simula delay
     try {
-        // Dados mockados
-        const mockApiResponse = [
-             { id: 'uuid-a1', name: 'Compressor de Ar C-101' },
-             { id: 'uuid-a2', name: 'Forno Industrial F-01' },
-             { id: 'uuid-a3', name: 'Esteira Transportadora E-22' },
-             { id: 'uuid-a4', name: 'Empilhadeira Elétrica E-03' },
-             { id: 'uuid-a5', name: 'Prensa Hidráulica P-05' }, // Adicionado
-             { id: 'uuid-a6', name: 'Bomba Hidráulica B-52' }, // Adicionado
-        ];
+        const response = await fetchAssetsService();
+        // A API pode retornar a lista dentro de 'results' se for paginada
+        const assets = response.results || response;
+
         // Mapeia para o formato esperado pelo BaseSelect { label, value }
-        assetOptions.value = mockApiResponse.map(asset => ({
+        assetOptions.value = assets.map(asset => ({
             label: asset.name,
             value: asset.id,
         }));
-         console.log("Ativos carregados:", assetOptions.value);
+        console.log("Ativos carregados:", assetOptions.value);
     } catch (error) {
         console.error("Erro ao buscar ativos:", error);
         errorMessage.value = "Erro ao carregar lista de ativos.";
@@ -138,26 +132,17 @@ async function fetchAssets() {
     }
 }
 
-// Simulação de busca de dados do Ticket (se estiver editando)
+// Busca de dados do Ticket (se estiver editando)
 async function fetchTicketData() {
     if (!isEditing.value) return; // Só busca se for edição
     isLoading.value = true;
     errorMessage.value = null;
     console.log("Buscando dados do Ticket para edição:", ticketId.value);
-    await new Promise(resolve => setTimeout(resolve, 500));
     try {
-        // Dados mockados (encontrar o ticket correspondente)
-        const mockTicket = { // Exemplo
-            'uuid-t1': { title: 'Painel da IHM não responde', assetId: 'uuid-a5', description: 'O painel touch screen...' },
-        }[ticketId.value];
-
-        if (mockTicket) {
-            ticketData.title = mockTicket.title;
-            ticketData.assetId = mockTicket.assetId;
-            ticketData.description = mockTicket.description;
-        } else {
-            throw new Error('Ticket não encontrado para edição.');
-        }
+        const data = await getTicketById(ticketId.value);
+        ticketData.title = data.title;
+        ticketData.assetId = data.asset ? data.asset.id : null;
+        ticketData.description = data.description;
     } catch (error) {
         console.error("Erro ao buscar dados do ticket:", error);
         errorMessage.value = `Erro ao carregar ticket: ${error.message}`;
@@ -166,35 +151,32 @@ async function fetchTicketData() {
     }
 }
 
-
 onMounted(() => {
   fetchAssets(); // Carrega a lista de ativos ao montar
   fetchTicketData(); // Carrega os dados do ticket se estiver editando
 });
 
-// Função de submissão (simulada)
+// Função de submissão
 async function handleSubmit() {
   isLoading.value = true;
-  errorMessage.value = null;
+  errorMessage.value = '';
   console.log("Submetendo dados do ticket:", ticketData);
-  await new Promise(resolve => setTimeout(resolve, 1000)); // Simula delay
 
   try {
-      // Lógica futura com ticketService:
-      // if (isEditing.value) {
-      //   await ticketService.update(ticketId.value, ticketData);
-      // } else {
-      //   await ticketService.create(ticketData);
-      // }
-      console.log("Ticket salvo com sucesso (simulado).");
+      if (isEditing.value) {
+        await updateTicket(ticketId.value, ticketData);
+      } else {
+        await createTicket(ticketData);
+      }
+      console.log("Ticket salvo com sucesso.");
       // Redireciona para a lista de tickets após salvar
       router.push('/tickets');
   } catch (error) {
       console.error("Erro ao salvar ticket:", error);
       errorMessage.value = `Erro ao salvar: ${error.message || 'Tente novamente.'}`;
-      isLoading.value = false; // Permite tentar novamente em caso de erro
+  } finally {
+      isLoading.value = false;
   }
-  // Não reseta isLoading aqui se o redirecionamento ocorrer
 }
 
 // Função para voltar

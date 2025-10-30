@@ -33,9 +33,9 @@
            <template #title>Informações Gerais</template>
             <ul class="details-list">
                  <li><strong>Status:</strong> <span :class="['status-badge', `status-${ticket.status.toLowerCase()}`]">{{ getStatusLabel(ticket.status) }}</span></li>
-                 <li><strong>Solicitante:</strong> {{ ticket.requester || '-' }}</li>
-                 <li><strong>Ativo:</strong> {{ ticket.asset || '-' }}</li>
-                 <li><strong>Criado em:</strong> {{ formatDate(ticket.createdAt) }}</li>
+                 <li><strong>Solicitante:</strong> {{ ticket.requester?.username || '-' }}</li>
+                 <li><strong>Ativo:</strong> {{ ticket.asset?.name || '-' }}</li>
+                 <li><strong>Criado em:</strong> {{ formatDate(ticket.created_at) }}</li>
             </ul>
             <!-- Ações contextuais (ex: Criar OS a partir do Ticket) podem vir aqui -->
        </BaseCard>
@@ -61,6 +61,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import BaseCard from '@/components/base/BaseCard.vue';
 import BaseButton from '@/components/base/BaseButton.vue';
+import { getTicketById } from './services/ticketService.js';
 
 const route = useRoute();
 const router = useRouter();
@@ -72,28 +73,17 @@ const error = ref(null);
 const ticketId = ref(route.params.id);
 const ticketIdShort = computed(() => ticketId.value?.substring(0, 8) || '');
 
-// Dados simulados
-const mockTickets = {
-    'uuid-t1': { id: 'uuid-t1', title: 'Painel da IHM não responde', asset: 'Prensa P-05', requester: 'Roberto Andrade', status: 'pending', createdAt: '2025-10-24T08:15:00Z', description: 'O painel touch screen da prensa P-05 travou e não aceita comandos.' },
-    'uuid-t2': { id: 'uuid-t2', title: 'Luz de emergência piscando', asset: 'Painel Elétrico PE-03', requester: 'Lúcia Martins', status: 'open', createdAt: '2025-10-24T10:00:00Z', description: 'A luz vermelha de emergência do painel PE-03 está piscando rapidamente.' },
-};
-
 onMounted(() => {
   fetchTicketDetail();
 });
 
-// Função para buscar dados do Ticket (simulada)
+// Função para buscar dados do Ticket (real)
 async function fetchTicketDetail() {
   isLoading.value = true;
   error.value = null;
-  await new Promise(resolve => setTimeout(resolve, 500));
   try {
-      const data = mockTickets[ticketId.value];
-      if (data) {
-          ticket.value = data;
-      } else {
-          throw new Error('Ticket não encontrado.');
-      }
+      const data = await getTicketById(ticketId.value);
+      ticket.value = data;
   } catch (err) {
       error.value = `Não foi possível carregar os detalhes do Ticket ${ticketIdShort.value}. ${err.message}`;
   } finally {
@@ -111,11 +101,25 @@ function goToEditTicket() {
     router.push(`/tickets/${ticketId.value}/edit`);
 }
 
+// Funções auxiliares
+function getStatusLabel(statusValue) {
+  const labels = {
+    pending: 'Pendente',
+    open: 'Aberto',
+    resolved: 'Resolvido',
+    closed: 'Fechado',
+  };
+  return labels[statusValue] || statusValue;
+}
 
-// Funções auxiliares (copiadas de TicketsView)
-function getStatusLabel(statusValue) { /* ... */ }
-function formatDate(dateString) { /* ... */ }
-
+function formatDate(dateString) {
+  if (!dateString) return '-';
+  const options = {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  };
+  return new Date(dateString).toLocaleDateString('pt-BR', options);
+}
 </script>
 
 <style scoped>
@@ -173,4 +177,3 @@ function formatDate(dateString) { /* ... */ }
     overflow-y: auto;
 }
 </style>
-

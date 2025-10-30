@@ -66,25 +66,64 @@ export const getTicketById = async (ticketId) => {
 /**
  * Cria um novo ticket no sistema.
  * O payload (ticketData) deve corresponder ao 'TicketCreateSerializer'.
+ * Mapeia o campo `assetId` do formulário para `asset_id` da API.
  *
  * @param {object} ticketData - Os dados para o novo ticket.
  * @param {string} ticketData.title - Título do ticket.
  * @param {string} ticketData.description - Descrição detalhada do problema.
- * @param {string} [ticketData.asset_id] - (Opcional) O UUID do ativo relacionado.
+ * @param {string} [ticketData.assetId] - (Opcional) O UUID do ativo relacionado.
  * @returns {Promise<object>} Uma promessa que resolve para o objeto do novo ticket criado.
- * @throws {Error} Lança um erro se a requisição da API falhar (ex: 400 Bad Request).
+ * @throws {Error} Lança um erro se a requisição da API falhar.
  */
 export const createTicket = async (ticketData) => {
   if (!ticketData || !ticketData.title || !ticketData.description) {
     throw new Error('[ticketService] createTicket: Título e Descrição são obrigatórios.');
   }
   try {
-    console.log('[ticketService] Criando novo ticket com dados:', ticketData);
-    // A API espera: { title, description, asset_id (opcional) }
-    const response = await apiClient.post(TICKET_API_URL, ticketData);
+    // Mapeia o campo assetId (do formulário) para asset_id (esperado pela API)
+    const payload = { ...ticketData };
+    if (payload.assetId) {
+      payload.asset_id = payload.assetId;
+      delete payload.assetId;
+    }
+
+    console.log('[ticketService] Criando novo ticket com payload:', payload);
+    const response = await apiClient.post(TICKET_API_URL, payload);
     return response.data;
   } catch (error) {
     console.error(`[ticketService] Erro ao criar ticket:`, error.response?.data || error.message);
+    throw error;
+  }
+};
+
+/**
+ * Atualiza um ticket existente no sistema.
+ * O payload (ticketData) deve corresponder ao 'TicketCreateSerializer' (parcial).
+ * Mapeia o campo `assetId` do formulário para `asset_id` da API.
+ *
+ * @param {string} ticketId - O UUID do ticket a ser atualizado.
+ * @param {object} ticketData - Os dados a serem atualizados.
+ * @returns {Promise<object>} Uma promessa que resolve para o objeto do ticket atualizado.
+ * @throws {Error} Lança um erro se a requisição da API falhar.
+ */
+export const updateTicket = async (ticketId, ticketData) => {
+  if (!ticketId) {
+    throw new Error('[ticketService] updateTicket: ID do ticket é obrigatório.');
+  }
+  try {
+    // Mapeia o campo assetId (do formulário) para asset_id (esperado pela API)
+    const payload = { ...ticketData };
+    if (payload.assetId) {
+      payload.asset_id = payload.assetId;
+      delete payload.assetId;
+    }
+
+    const url = `${TICKET_API_URL}${ticketId}/`;
+    console.log(`[ticketService] Atualizando ticket ${ticketId} com payload:`, payload);
+    const response = await apiClient.patch(url, payload);
+    return response.data;
+  } catch (error) {
+    console.error(`[ticketService] Erro ao atualizar ticket ${ticketId}:`, error.response?.data || error.message);
     throw error;
   }
 };
